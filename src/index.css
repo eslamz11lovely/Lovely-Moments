@@ -1,0 +1,312 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Tajawal:wght@300;400;500;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 230 25% 7%;
+    --foreground: 0 0% 98%;
+
+    --card: 230 20% 12%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 230 20% 12%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 340 82% 62%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 270 60% 55%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 230 15% 18%;
+    --muted-foreground: 230 10% 60%;
+
+    --accent: 350 70% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 230 15% 20%;
+    --input: 230 15% 20%;
+    --ring: 340 82% 62%;
+
+    --radius: 1rem;
+
+    --gradient-primary: linear-gradient(135deg, hsl(340, 82%, 62%), hsl(270, 60%, 55%));
+    --gradient-hero: linear-gradient(135deg, hsl(230, 25%, 7%) 0%, hsl(270, 30%, 15%) 50%, hsl(340, 40%, 15%) 100%);
+    --gradient-card: linear-gradient(135deg, hsla(340, 82%, 62%, 0.1), hsla(270, 60%, 55%, 0.1));
+    --gradient-glow: radial-gradient(circle, hsla(340, 82%, 62%, 0.3), transparent 70%);
+
+    --shadow-glow: 0 0 30px hsla(340, 82%, 62%, 0.3);
+    --shadow-card: 0 8px 32px hsla(0, 0%, 0%, 0.3);
+    --shadow-elevated: 0 20px 60px hsla(0, 0%, 0%, 0.4);
+
+    --glass-bg: hsla(230, 20%, 12%, 0.6);
+    --glass-border: hsla(0, 0%, 100%, 0.08);
+    --glass-shine: hsla(0, 0%, 100%, 0.05);
+
+    --sidebar-background: 230 20% 10%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 340 82% 62%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 270 60% 55%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 230 15% 20%;
+    --sidebar-ring: 340 82% 62%;
+  }
+
+  /* ── Light theme ───────────────────────────────── */
+  html.light {
+    --background: 30 40% 96%;
+    --foreground: 230 25% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 230 25% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 230 25% 12%;
+
+    --primary: 340 82% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 270 60% 50%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 220 15% 90%;
+    --muted-foreground: 220 10% 45%;
+
+    --accent: 350 70% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 220 15% 80%;
+    --input: 220 15% 85%;
+    --ring: 340 82% 55%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(340, 82%, 55%), hsl(270, 60%, 50%));
+    --gradient-hero: linear-gradient(135deg, hsl(30, 40%, 96%) 0%, hsl(270, 30%, 92%) 50%, hsl(340, 40%, 93%) 100%);
+    --gradient-card: linear-gradient(135deg, hsla(340, 82%, 55%, 0.08), hsla(270, 60%, 50%, 0.08));
+    --gradient-glow: radial-gradient(circle, hsla(340, 82%, 55%, 0.2), transparent 70%);
+
+    --shadow-glow: 0 0 30px hsla(340, 82%, 55%, 0.2);
+    --shadow-card: 0 8px 32px hsla(0, 0%, 0%, 0.08);
+    --shadow-elevated: 0 20px 60px hsla(0, 0%, 0%, 0.12);
+
+    --glass-bg: hsla(0, 0%, 100%, 0.75);
+    --glass-border: hsla(340, 30%, 70%, 0.25);
+    --glass-shine: hsla(0, 0%, 100%, 0.8);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  html {
+    direction: rtl;
+    /* ✅ Smooth scrolling globally */
+    scroll-behavior: smooth;
+    /* ✅ Prevent horizontal overflow without breaking scroll context */
+    overflow-x: hidden;
+  }
+
+  body {
+    @apply bg-background text-foreground font-cairo;
+    background: var(--gradient-hero);
+    background-attachment: fixed;
+    overflow-x: hidden;
+    /* ✅ iOS momentum (inertia) scrolling */
+    -webkit-overflow-scrolling: touch;
+    /* ✅ Force GPU layer for smooth paint */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ✅ Animated elements get their own composite layer — prevents layout jank */
+  .float-animation,
+  .float-animation-delay {
+    will-change: transform;
+  }
+
+  /* ✅ Inputs, selects, textareas always use theme-aware colours */
+  input,
+  select,
+  textarea {
+    background-color: hsl(var(--input));
+    color: hsl(var(--foreground));
+    border-color: hsl(var(--border));
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: hsl(var(--muted-foreground));
+    opacity: 1;
+  }
+
+  /* Fix select arrow color in light mode */
+  html.light select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23555' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 0.75rem center;
+  }
+}
+
+@layer components {
+  .glass-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  /* ⚡ Mobile Performance Boost: Reduce heavy blurs on small screens */
+  @media (max-width: 768px) {
+    .glass-card {
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .backdrop-blur-xl {
+      backdrop-filter: blur(8px) !important;
+      -webkit-backdrop-filter: blur(8px) !important;
+    }
+
+    .backdrop-blur-lg {
+      backdrop-filter: blur(6px) !important;
+      -webkit-backdrop-filter: blur(6px) !important;
+    }
+
+    .backdrop-blur-md {
+      backdrop-filter: blur(4px) !important;
+      -webkit-backdrop-filter: blur(4px) !important;
+    }
+  }
+
+  .gradient-text {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .glow-button {
+    background: var(--gradient-primary);
+    box-shadow: var(--shadow-glow);
+    transition: all 0.3s ease;
+  }
+
+  .glow-button:hover {
+    box-shadow: 0 0 50px hsla(340, 82%, 62%, 0.5);
+    transform: translateY(-2px);
+  }
+
+  .cta-glow-button {
+    background: var(--gradient-primary);
+    box-shadow: var(--shadow-glow);
+    transition: all 0.3s ease;
+    animation: ctaGlowPulse 2.5s ease-in-out infinite;
+  }
+
+  .cta-glow-button:hover {
+    box-shadow: 0 0 60px hsla(340, 82%, 62%, 0.65), 0 0 100px hsla(340, 82%, 62%, 0.2);
+    transform: translateY(-3px) scale(1.04);
+    animation-play-state: paused;
+  }
+
+  .pricing-popular {
+    border: 2px solid hsl(340, 82%, 62%);
+    box-shadow: var(--shadow-glow);
+    transform: scale(1.05);
+  }
+
+  .float-animation {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .float-animation-delay {
+    animation: float 6s ease-in-out 2s infinite;
+  }
+
+  .testimonial-marquee-wrapper {
+    direction: ltr;
+    /* Force LTR for easy continuous scroll math */
+    display: flex;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+  }
+
+  .testimonial-marquee-track {
+    display: flex;
+    gap: 1.5rem;
+    width: max-content;
+    animation: slideMarquee 35s linear infinite;
+  }
+
+  .testimonial-marquee-track:hover {
+    animation-play-state: paused;
+  }
+
+  .testimonial-card {
+    direction: rtl;
+    /* Revert text to RTL */
+  }
+}
+
+
+
+
+
+
+
+@keyframes heart-float {
+  0% {
+    transform: translateY(100vh) scale(0);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  90% {
+    opacity: 0.5;
+  }
+
+  100% {
+    transform: translateY(-10vh) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes featuredGlow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 15px hsla(45, 90%, 55%, 0.15), 0 0 30px hsla(45, 90%, 55%, 0.05);
+  }
+
+  50% {
+    box-shadow: 0 0 25px hsla(45, 90%, 55%, 0.3), 0 0 50px hsla(45, 90%, 55%, 0.1);
+  }
+}
+
+@keyframes slideMarquee {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(calc(-50% - 0.75rem));
+  }
+
+  /* -50% of content, adjust for gap */
+}
