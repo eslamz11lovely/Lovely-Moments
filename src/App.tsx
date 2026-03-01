@@ -12,6 +12,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import ScrollToTopOnRouteChange from "@/components/ScrollToTopOnRouteChange";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import HeartLoader from "@/components/HeartLoader";
+import { Analytics } from "@vercel/analytics/react";
 
 // Lazy Loaded Pages
 const HomePage = lazy(() => import("@/pages/HomePage"));
@@ -78,6 +79,7 @@ const App = () => (
         </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>
+    <Analytics />
   </QueryClientProvider>
 );
 
