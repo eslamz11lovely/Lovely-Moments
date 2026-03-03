@@ -1,21 +1,21 @@
 /**
  * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- *  Lovely Moments — Telegram Order Notification Function
+ *  Lovely Moments — Firebase Cloud Functions
  * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  *
- *  Trigger : Firestore  →  orders/{orderId}  (onCreate)
- *  Action  : Send formatted HTML message to Telegram Bot
- *  Runtime : Firebase Cloud Functions v2
+ *  Functions:
+ *  1. onNewOrder      — Telegram notification on new order
+ *  2. uploadReviewImage — Secure image upload via imgbb/freeimage
  *
- *  Environment Variables (set via Secret Manager or env config):
- *    TELEGRAM_TOKEN  — Bot token (never exposed in frontend)
- *
- *  Telegram Chat ID is stored as a constant because it
- *  identifies the receiving chat, not a secret credential.
+ *  Environment Secrets (Firebase Secret Manager):
+ *    TELEGRAM_TOKEN   — Telegram bot token
+ *    IMGBB_API_KEY    — imgbb API key
+ *    FREEIMAGE_KEY    — Freeimage.host API key
  * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  */
 
 const { onDocumentCreated } = require("firebase-functions/v2/firestore");
+const { onRequest } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const { initializeApp } = require("firebase-admin/app");
 const { getFirestore } = require("firebase-admin/firestore");
@@ -26,50 +26,32 @@ initializeApp();
 const db = getFirestore();
 
 // ── Secrets ───────────────────────────────────────────────
-// The bot token is loaded from Firebase Secret Manager or
-// Cloud Functions environment config — never hard‑coded.
 const telegramToken = defineSecret("TELEGRAM_TOKEN");
+const imgbbApiKey = defineSecret("IMGBB_API_KEY");
+const freeimageKey = defineSecret("FREEIMAGE_KEY");
 
 // ── Constants ─────────────────────────────────────────────
 const TELEGRAM_CHAT_ID = "6555571904";
 
 // ── Helpers ───────────────────────────────────────────────
 
-/**
- * Safely read a field from the order data, returning a
- * fallback string when the value is null / undefined.
- */
 const safe = (value, fallback = "غير محدد") =>
     value !== null && value !== undefined && value !== ""
         ? String(value)
         : fallback;
 
-/**
- * Format a Firestore Timestamp (or JS Date / ISO string)
- * into a human‑readable Arabic‑friendly date string.
- */
 function formatDate(raw) {
     if (!raw) return "غير محدد";
-
     try {
         let date;
-
-        // Firestore Timestamp object
         if (raw.toDate && typeof raw.toDate === "function") {
             date = raw.toDate();
-        }
-        // Firestore Timestamp‑like object { _seconds, _nanoseconds }
-        else if (raw._seconds !== undefined) {
+        } else if (raw._seconds !== undefined) {
             date = new Date(raw._seconds * 1000);
-        }
-        // Plain JS Date or ISO string
-        else {
+        } else {
             date = new Date(raw);
         }
-
         if (isNaN(date.getTime())) return "غير محدد";
-
-        // Format: YYYY-MM-DD  hh:mm AM/PM  (Cairo timezone)
         return date.toLocaleString("ar-EG", {
             timeZone: "Africa/Cairo",
             year: "numeric",
@@ -84,34 +66,25 @@ function formatDate(raw) {
     }
 }
 
-/**
- * Build the HTML message body for Telegram.
- */
 function buildMessage(orderId, data) {
-    const customerName = safe(data.customerName);
-    const phone = safe(data.phone);
-    const customerCode = safe(data.customerCode);
-    const occasionType = safe(data.occasionType);
-    const packageName = safe(data.packageName);
-    const giftDetails = safe(data.giftDetails);
-    const formattedDate = formatDate(data.createdAt);
-
     return [
         `🆕 <b>طلب جديد في Lovely Moments 🎀</b>`,
         ``,
-        `👤 <b>الاسم:</b> ${customerName}`,
-        `📱 <b>واتساب:</b> ${phone}`,
-        `🆔 <b>كود العميل:</b> ${customerCode}`,
-        `🎉 <b>نوع المناسبة:</b> ${occasionType}`,
-        `📦 <b>الباقة:</b> ${packageName}`,
+        `👤 <b>الاسم:</b> ${safe(data.customerName)}`,
+        `📱 <b>واتساب:</b> ${safe(data.phone)}`,
+        `🆔 <b>كود العميل:</b> ${safe(data.customerCode)}`,
+        `🎉 <b>نوع المناسبة:</b> ${safe(data.occasionType)}`,
+        `📦 <b>الباقة:</b> ${safe(data.packageName)}`,
         `🎁 <b>تفاصيل الهدية:</b>`,
-        `${giftDetails}`,
+        `${safe(data.giftDetails)}`,
         ``,
-        `🕒 <b>الوقت:</b> ${formattedDate}`,
+        `🕒 <b>الوقت:</b> ${formatDate(data.createdAt)}`,
     ].join("\n");
 }
 
-// ── Cloud Function ────────────────────────────────────────
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  FUNCTION 1: Telegram Order Notification
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 exports.onNewOrder = onDocumentCreated(
     {
@@ -131,18 +104,12 @@ exports.onNewOrder = onDocumentCreated(
 
         console.log(`📦 New order detected: ${orderId}`);
 
-        // ── Prevent duplicate sends ───────────────────────
-        // If a previous invocation already notified for this
-        // order, bail out immediately.
         if (orderData._telegramNotified === true) {
             console.log(`⏭️  Order ${orderId} already notified — skipping.`);
             return null;
         }
 
-        // Build message
         const message = buildMessage(orderId, orderData);
-
-        // ── Send to Telegram ──────────────────────────────
         const token = telegramToken.value();
         const url = `https://api.telegram.org/bot${token}/sendMessage`;
 
@@ -158,24 +125,119 @@ exports.onNewOrder = onDocumentCreated(
                 `— Telegram message_id: ${response.data?.result?.message_id}`
             );
 
-            // Mark the order as notified to prevent duplicates
             await db.collection("orders").doc(orderId).update({
                 _telegramNotified: true,
             });
 
             console.log(`🔒 Order ${orderId} marked as notified.`);
         } catch (error) {
-            // Log the full error but don't crash the function
             console.error(
                 `❌ Failed to send Telegram notification for order ${orderId}:`,
                 error?.response?.data || error.message
             );
-
-            // Re‑throw so Cloud Functions records the failure and
-            // can retry if retry‑on‑failure is enabled.
             throw new Error(
                 `Telegram notification failed: ${error?.response?.data?.description || error.message}`
             );
         }
+    }
+);
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  FUNCTION 2: Secure Review Image Upload
+//  POST body: { image: base64string, filename: string }
+//  Returns:   { url: string, source: "imgbb"|"freeimage"|"none" }
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+exports.uploadReviewImage = onRequest(
+    {
+        region: "us-central1",
+        secrets: [imgbbApiKey, freeimageKey],
+        cors: true,
+        timeoutSeconds: 30,
+    },
+    async (req, res) => {
+        // ── CORS headers ───────────────────────────────
+        res.set("Access-Control-Allow-Origin", "*");
+        res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+        res.set("Access-Control-Allow-Headers", "Content-Type");
+
+        if (req.method === "OPTIONS") {
+            res.status(204).send("");
+            return;
+        }
+
+        if (req.method !== "POST") {
+            res.status(405).json({ error: "Method not allowed" });
+            return;
+        }
+
+        const { image, filename } = req.body;
+
+        if (!image) {
+            res.status(400).json({ error: "No image provided" });
+            return;
+        }
+
+        // Max base64 size check (~5MB raw ≈ ~6.7MB base64)
+        if (image.length > 7_000_000) {
+            res.status(400).json({ error: "Image too large (max 5MB)" });
+            return;
+        }
+
+        // ── Try imgbb ──────────────────────────────────
+        try {
+            const formData = new URLSearchParams();
+            formData.append("key", imgbbApiKey.value());
+            formData.append("image", image);
+            if (filename) formData.append("name", filename);
+
+            const imgbbResp = await axios.post(
+                "https://api.imgbb.com/1/upload",
+                formData.toString(),
+                {
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    timeout: 20000,
+                }
+            );
+
+            const url = imgbbResp.data?.data?.display_url || imgbbResp.data?.data?.url;
+            if (url) {
+                console.log("✅ Image uploaded via imgbb:", url);
+                res.status(200).json({ url, source: "imgbb" });
+                return;
+            }
+        } catch (imgbbError) {
+            console.warn("imgbb upload failed:", imgbbError?.response?.data || imgbbError.message);
+        }
+
+        // ── Fallback: Freeimage.host ───────────────────
+        try {
+            const formData2 = new URLSearchParams();
+            formData2.append("key", freeimageKey.value());
+            formData2.append("source", image);
+            formData2.append("format", "json");
+
+            const freeResp = await axios.post(
+                "https://freeimage.host/api/1/upload",
+                formData2.toString(),
+                {
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    timeout: 20000,
+                }
+            );
+
+            const url2 = freeResp.data?.image?.url;
+            if (url2) {
+                console.log("✅ Image uploaded via freeimage.host:", url2);
+                res.status(200).json({ url: url2, source: "freeimage" });
+                return;
+            }
+        } catch (freeError) {
+            console.warn("freeimage.host upload failed:", freeError?.response?.data || freeError.message);
+        }
+
+        // ── Both failed — continue without image ──────
+        console.warn("Both image upload APIs failed — returning none");
+        res.status(200).json({ url: null, source: "none" });
     }
 );

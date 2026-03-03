@@ -145,6 +145,18 @@
     border-color: hsl(var(--border));
   }
 
+  /* Utility for hiding scrollbars on custom components */
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+  }
+
   input::placeholder,
   textarea::placeholder {
     color: hsl(var(--muted-foreground));
@@ -259,6 +271,331 @@
     direction: rtl;
     /* Revert text to RTL */
   }
+}
+
+/* ═══════════════════════════════════════════════════════
+   Admin Dashboard — Light Mode Overrides
+   ═══════════════════════════════════════════════════════ */
+
+html.light .admin-dashboard {
+  background: linear-gradient(135deg, hsl(30, 40%, 97%) 0%, hsl(270, 25%, 95%) 50%, hsl(340, 30%, 96%) 100%) !important;
+}
+
+/* ── Sidebar ─────────────────────────────────── */
+html.light .admin-dashboard aside {
+  background: hsla(0, 0%, 100%, 0.92) !important;
+  border-color: hsl(220, 15%, 88%) !important;
+  backdrop-filter: blur(20px);
+}
+
+html.light .admin-dashboard aside .border-b,
+html.light .admin-dashboard aside .border-t {
+  border-color: hsl(220, 15%, 90%) !important;
+}
+
+html.light .admin-dashboard aside h2 {
+  color: hsl(230, 25%, 18%) !important;
+}
+
+html.light .admin-dashboard aside p {
+  color: hsl(220, 10%, 50%) !important;
+}
+
+html.light .admin-dashboard aside nav button {
+  color: hsl(220, 10%, 45%) !important;
+}
+
+html.light .admin-dashboard aside nav button:hover {
+  color: hsl(230, 25%, 18%) !important;
+  background: hsl(220, 15%, 93%) !important;
+}
+
+html.light .admin-dashboard aside nav button.bg-gradient-to-r {
+  background: linear-gradient(to right, hsla(270, 60%, 55%, 0.12), hsla(340, 82%, 55%, 0.12)) !important;
+  color: hsl(270, 60%, 45%) !important;
+  border-color: hsl(270, 50%, 75%) !important;
+}
+
+html.light .admin-dashboard aside nav button.bg-gradient-to-r span {
+  color: inherit !important;
+}
+
+html.light .admin-dashboard aside nav button svg.text-purple-400 {
+  color: hsl(270, 60%, 50%) !important;
+}
+
+html.light .admin-dashboard aside button.text-red-400 {
+  color: hsl(0, 70%, 50%) !important;
+}
+
+html.light .admin-dashboard aside button.text-red-400:hover {
+  background: hsla(0, 70%, 50%, 0.08) !important;
+}
+
+/* ── Mobile toggle ───────────────────────────── */
+html.light .admin-dashboard>button.fixed {
+  background: hsla(0, 0%, 100%, 0.9) !important;
+  border-color: hsl(220, 15%, 85%) !important;
+  color: hsl(230, 25%, 18%) !important;
+}
+
+/* ── Main Content: headings & text ──────────── */
+html.light .admin-dashboard .text-white {
+  color: hsl(230, 25%, 15%) !important;
+}
+
+html.light .admin-dashboard .text-slate-300 {
+  color: hsl(220, 10%, 35%) !important;
+}
+
+html.light .admin-dashboard .text-slate-400 {
+  color: hsl(220, 10%, 45%) !important;
+}
+
+html.light .admin-dashboard .text-slate-500 {
+  color: hsl(220, 10%, 55%) !important;
+}
+
+html.light .admin-dashboard .text-slate-600 {
+  color: hsl(220, 10%, 50%) !important;
+}
+
+/* ── Cards & Panels ──────────────────────────── */
+html.light .admin-dashboard .bg-slate-900\/90,
+html.light .admin-dashboard .bg-slate-900\/95,
+html.light .admin-dashboard .bg-slate-900\/80 {
+  background: hsla(0, 0%, 100%, 0.85) !important;
+}
+
+html.light .admin-dashboard .bg-slate-900\/50,
+html.light .admin-dashboard .bg-slate-900\/60 {
+  background: hsla(220, 15%, 96%, 0.9) !important;
+}
+
+html.light .admin-dashboard .bg-slate-800\/50,
+html.light .admin-dashboard .bg-slate-800\/40,
+html.light .admin-dashboard .bg-slate-800\/30,
+html.light .admin-dashboard .bg-slate-800\/80 {
+  background: hsla(0, 0%, 100%, 0.7) !important;
+}
+
+html.light .admin-dashboard .bg-slate-800\/20 {
+  background: hsla(0, 0%, 100%, 0.5) !important;
+}
+
+html.light .admin-dashboard .bg-slate-800 {
+  background: hsl(220, 15%, 95%) !important;
+}
+
+html.light .admin-dashboard .bg-slate-700\/50,
+html.light .admin-dashboard .bg-slate-700\/40,
+html.light .admin-dashboard .bg-slate-700\/60,
+html.light .admin-dashboard .bg-slate-700 {
+  background: hsl(220, 15%, 92%) !important;
+}
+
+/* ── Borders ─────────────────────────────────── */
+html.light .admin-dashboard .border-slate-700\/50,
+html.light .admin-dashboard .border-slate-700\/40,
+html.light .admin-dashboard .border-slate-700\/30,
+html.light .admin-dashboard .border-slate-700 {
+  border-color: hsl(220, 15%, 88%) !important;
+}
+
+html.light .admin-dashboard .border-slate-800\/50 {
+  border-color: hsl(220, 15%, 90%) !important;
+}
+
+html.light .admin-dashboard .border-slate-600\/50,
+html.light .admin-dashboard .border-slate-600\/40,
+html.light .admin-dashboard .border-slate-600 {
+  border-color: hsl(220, 15%, 85%) !important;
+}
+
+/* ── Inputs ──────────────────────────────────── */
+html.light .admin-dashboard input,
+html.light .admin-dashboard textarea,
+html.light .admin-dashboard select {
+  background-color: hsl(220, 20%, 97%) !important;
+  border-color: hsl(220, 15%, 85%) !important;
+  color: hsl(230, 25%, 15%) !important;
+}
+
+html.light .admin-dashboard input::placeholder,
+html.light .admin-dashboard textarea::placeholder {
+  color: hsl(220, 10%, 60%) !important;
+}
+
+html.light .admin-dashboard input:focus,
+html.light .admin-dashboard textarea:focus,
+html.light .admin-dashboard select:focus {
+  border-color: hsl(270, 50%, 65%) !important;
+}
+
+/* ── Table ───────────────────────────────────── */
+html.light .admin-dashboard table thead tr {
+  border-color: hsl(220, 15%, 88%) !important;
+}
+
+html.light .admin-dashboard table thead th {
+  color: hsl(220, 10%, 45%) !important;
+}
+
+html.light .admin-dashboard table tbody tr {
+  border-color: hsl(220, 15%, 93%) !important;
+}
+
+html.light .admin-dashboard table tbody tr:hover {
+  background: hsl(220, 15%, 96%) !important;
+}
+
+html.light .admin-dashboard table td {
+  color: hsl(230, 25%, 20%) !important;
+}
+
+html.light .admin-dashboard table td .text-emerald-400 {
+  color: hsl(155, 70%, 35%) !important;
+}
+
+html.light .admin-dashboard table td .text-purple-400 {
+  color: hsl(270, 60%, 48%) !important;
+}
+
+/* ── Overview stats card ─────────────────────── */
+html.light .admin-dashboard .bg-gradient-to-br.from-slate-700\/50 {
+  background: linear-gradient(to bottom right, hsl(220, 15%, 90%), hsl(220, 15%, 95%)) !important;
+}
+
+/* ── Notification banner ─────────────────────── */
+html.light .admin-dashboard .bg-emerald-500\/10 {
+  background: hsla(155, 70%, 45%, 0.08) !important;
+}
+
+html.light .admin-dashboard .text-emerald-300 {
+  color: hsl(155, 65%, 35%) !important;
+}
+
+html.light .admin-dashboard .text-emerald-400 {
+  color: hsl(155, 70%, 35%) !important;
+}
+
+/* ── Modals ──────────────────────────────────── */
+html.light .admin-dashboard .bg-slate-800\/95 {
+  background: hsla(0, 0%, 100%, 0.97) !important;
+}
+
+html.light .admin-dashboard .bg-slate-900 {
+  background: hsl(0, 0%, 100%) !important;
+}
+
+/* ── Labels in admin forms ───────────────────── */
+html.light .admin-dashboard label {
+  color: hsl(220, 10%, 35%) !important;
+}
+
+/* ── Various accent text stays visible ────────── */
+html.light .admin-dashboard .text-amber-400 {
+  color: hsl(35, 90%, 42%) !important;
+}
+
+html.light .admin-dashboard .text-orange-400 {
+  color: hsl(25, 90%, 45%) !important;
+}
+
+html.light .admin-dashboard .text-blue-400 {
+  color: hsl(220, 85%, 48%) !important;
+}
+
+html.light .admin-dashboard .text-pink-400 {
+  color: hsl(340, 80%, 50%) !important;
+}
+
+html.light .admin-dashboard .text-green-400 {
+  color: hsl(145, 70%, 32%) !important;
+}
+
+html.light .admin-dashboard .text-red-400 {
+  color: hsl(0, 72%, 50%) !important;
+}
+
+html.light .admin-dashboard .text-yellow-400 {
+  color: hsl(40, 90%, 40%) !important;
+}
+
+/* ── Status badges remain legible ────────────── */
+html.light .admin-dashboard .bg-blue-500\/20 {
+  background: hsla(220, 85%, 55%, 0.12) !important;
+}
+
+html.light .admin-dashboard .bg-yellow-500\/20 {
+  background: hsla(45, 90%, 50%, 0.12) !important;
+}
+
+html.light .admin-dashboard .bg-green-500\/20 {
+  background: hsla(145, 70%, 45%, 0.12) !important;
+}
+
+html.light .admin-dashboard .bg-red-500\/20 {
+  background: hsla(0, 72%, 55%, 0.12) !important;
+}
+
+html.light .admin-dashboard .bg-amber-500\/20,
+html.light .admin-dashboard .bg-amber-500\/10 {
+  background: hsla(35, 90%, 50%, 0.1) !important;
+}
+
+html.light .admin-dashboard .bg-purple-500\/20 {
+  background: hsla(270, 60%, 55%, 0.1) !important;
+}
+
+html.light .admin-dashboard .bg-orange-500\/20,
+html.light .admin-dashboard .bg-orange-500\/10,
+html.light .admin-dashboard .bg-orange-500\/15 {
+  background: hsla(25, 90%, 50%, 0.1) !important;
+}
+
+/* ── Pagination ──────────────────────────────── */
+html.light .admin-dashboard .bg-purple-500\/30 {
+  background: hsla(270, 60%, 55%, 0.15) !important;
+}
+
+html.light .admin-dashboard .text-purple-300 {
+  color: hsl(270, 55%, 48%) !important;
+}
+
+/* ── Gradient buttons remain intact ──────────── */
+html.light .admin-dashboard .bg-gradient-to-r.from-purple-500,
+html.light .admin-dashboard .bg-gradient-to-r.from-purple-600,
+html.light .admin-dashboard .bg-gradient-to-r.from-orange-500,
+html.light .admin-dashboard .bg-gradient-to-r.from-amber-500 {
+  color: white !important;
+}
+
+/* ── "New order" row glow in light mode ──────── */
+html.light .admin-dashboard tr.bg-blue-900\/30 {
+  background: hsla(220, 85%, 55%, 0.08) !important;
+}
+
+/* ── Select dropdown options ─────────────────── */
+html.light .admin-dashboard select option {
+  background: white !important;
+  color: hsl(230, 25%, 15%) !important;
+}
+
+/* ── AlertDialog in light mode ───────────────── */
+html.light .admin-dashboard [role="alertdialog"] {
+  background: white !important;
+  border-color: hsl(220, 15%, 88%) !important;
+}
+
+html.light .admin-dashboard [role="alertdialog"] h2,
+html.light .admin-dashboard [role="alertdialog"] [class*="Title"] {
+  color: hsl(230, 25%, 15%) !important;
+}
+
+html.light .admin-dashboard [role="alertdialog"] p,
+html.light .admin-dashboard [role="alertdialog"] [class*="Description"] {
+  color: hsl(220, 10%, 45%) !important;
 }
 
 

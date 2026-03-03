@@ -17,22 +17,32 @@ import {
 } from "firebase/firestore";
 import { getDatabase } from "./firebase";
 
+export interface Discount {
+    enabled: boolean;
+    percentage: number;       // e.g. 20 = 20% off
+    label: string;            // e.g. "عرض العيد"
+    expiresAt: string | null; // ISO date string, null = no expiry
+}
+
 export interface Pricing {
     id?: string;
     basic: number;
     medium: number;
     premium: number;
+    discount: Discount;
     updatedAt: Timestamp | Date;
 }
 
+// Default discount state
+export const DEFAULT_DISCOUNT: Discount = {
+    enabled: false,
+    percentage: 0,
+    label: "",
+    expiresAt: null,
+};
+
 // Pricing document ID in Firestore
 const PRICING_DOC_ID = "current";
-
-// Get pricing collection reference
-const getPricingCollection = () => {
-    const db = getDatabase();
-    return collection(db, "pricing");
-};
 
 // Get pricing document reference
 const getPricingDocRef = () => {
@@ -40,25 +50,43 @@ const getPricingDocRef = () => {
     return doc(db, "pricing", PRICING_DOC_ID);
 };
 
-// Get current pricing from Firestore
+// ── Calculate discounted price ─────────────────────────
+
+export const calcDiscountedPrice = (price: number, discount: Discount): number => {
+    if (!discount.enabled || discount.percentage <= 0) return price;
+    if (discount.expiresAt && new Date(discount.expiresAt) < new Date()) return price;
+    return Math.round(price * (1 - discount.percentage / 100));
+};
+
+// ── Check if discount is currently active ─────────────
+
+export const isDiscountActive = (discount: Discount): boolean => {
+    if (!discount.enabled || discount.percentage <= 0) return false;
+    if (discount.expiresAt && new Date(discount.expiresAt) < new Date()) return false;
+    return true;
+};
+
+// ── Get current pricing from Firestore ────────────────
+
 export const getPricing = async (): Promise<Pricing | null> => {
     try {
         const docSnap = await getDoc(getPricingDocRef());
-
         if (docSnap.exists()) {
+            const data = docSnap.data();
             return {
                 id: docSnap.id,
-                ...docSnap.data()
+                ...data,
+                discount: data.discount ?? DEFAULT_DISCOUNT,
             } as Pricing;
         }
-
         return null;
     } catch (error: any) {
         throw new Error(`Failed to fetch pricing: ${error.message}`);
     }
 };
 
-// Subscribe to real-time pricing updates
+// ── Subscribe to real-time pricing updates ────────────
+
 export const subscribeToPricing = (
     callback: (pricing: Pricing | null) => void,
     onError?: (error: Error) => void
@@ -67,42 +95,41 @@ export const subscribeToPricing = (
         getPricingDocRef(),
         (docSnap) => {
             if (docSnap.exists()) {
-                const pricing = {
+                const data = docSnap.data();
+                callback({
                     id: docSnap.id,
-                    ...docSnap.data()
-                } as Pricing;
-                callback(pricing);
+                    ...data,
+                    discount: data.discount ?? DEFAULT_DISCOUNT,
+                } as Pricing);
             } else {
                 callback(null);
             }
         },
         (error) => {
-            if (onError) {
-                onError(error as Error);
-            }
+            if (onError) onError(error as Error);
         }
     );
-
     return unsubscribe;
 };
 
-// Update pricing in Firestore
+// ── Update prices ─────────────────────────────────────
+
 export const updatePricing = async (pricing: Omit<Pricing, "updatedAt" | "id">): Promise<void> => {
     try {
         await updateDoc(getPricingDocRef(), {
             basic: pricing.basic,
             medium: pricing.medium,
             premium: pricing.premium,
-            updatedAt: serverTimestamp()
+            updatedAt: serverTimestamp(),
         });
     } catch (error: any) {
-        // If document doesn't exist, create it
         if (error.code === "not-found") {
             await setDoc(getPricingDocRef(), {
                 basic: pricing.basic,
                 medium: pricing.medium,
                 premium: pricing.premium,
-                updatedAt: serverTimestamp()
+                discount: DEFAULT_DISCOUNT,
+                updatedAt: serverTimestamp(),
             });
         } else {
             throw new Error(`Failed to update pricing: ${error.message}`);
@@ -110,17 +137,41 @@ export const updatePricing = async (pricing: Omit<Pricing, "updatedAt" | "id">):
     }
 };
 
-// Create initial pricing document if it doesn't exist
+// ── Update discount settings ──────────────────────────
+
+export const updateDiscount = async (discount: Discount): Promise<void> => {
+    try {
+        await updateDoc(getPricingDocRef(), {
+            discount,
+            updatedAt: serverTimestamp(),
+        });
+    } catch (error: any) {
+        if (error.code === "not-found") {
+            await setDoc(getPricingDocRef(), {
+                basic: 299,
+                medium: 499,
+                premium: 899,
+                discount,
+                updatedAt: serverTimestamp(),
+            });
+        } else {
+            throw new Error(`Failed to update discount: ${error.message}`);
+        }
+    }
+};
+
+// ── Create initial pricing if not exists ──────────────
+
 export const createInitialPricing = async (): Promise<void> => {
     try {
         const docSnap = await getDoc(getPricingDocRef());
-
         if (!docSnap.exists()) {
             await setDoc(getPricingDocRef(), {
                 basic: 299,
                 medium: 499,
                 premium: 899,
-                updatedAt: serverTimestamp()
+                discount: DEFAULT_DISCOUNT,
+                updatedAt: serverTimestamp(),
             });
         }
     } catch (error: any) {
@@ -128,19 +179,19 @@ export const createInitialPricing = async (): Promise<void> => {
     }
 };
 
-// Reset pricing to default values
+// ── Reset pricing to defaults ─────────────────────────
+
 export const resetPricing = async (): Promise<void> => {
-    await updatePricing({
-        basic: 299,
-        medium: 499,
-        premium: 899
-    });
+    await updatePricing({ basic: 299, medium: 499, premium: 899, discount: DEFAULT_DISCOUNT });
 };
 
 export default {
     getPricing,
     subscribeToPricing,
     updatePricing,
+    updateDiscount,
     createInitialPricing,
-    resetPricing
+    resetPricing,
+    calcDiscountedPrice,
+    isDiscountActive,
 };

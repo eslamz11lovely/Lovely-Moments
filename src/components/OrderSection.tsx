@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Loader2, CheckCircle2, Copy, Check, CreditCard } from "lucide-react";
+import { Send, Loader2, CheckCircle2, Copy, Check, CreditCard, Tag } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { addOrder } from "../services/ordersService";
-import { subscribeToPricing, Pricing } from "../services/pricingService";
+import { subscribeToPricing, Pricing, calcDiscountedPrice, isDiscountActive } from "../services/pricingService";
 import { sendTelegramNotification } from "../services/telegramService";
 
 // ─── Form field types ──────────────────────────────────────────────────────────
@@ -95,9 +95,21 @@ const OrderSection = () => {
     return () => unsubscribe();
   }, []);
 
-  const getPrice = (key: string): string => {
-    if (!pricing) return "";
-    return ((pricing as any)[key] ?? "").toString();
+  const discount = pricing?.discount;
+  const discountOn = discount ? isDiscountActive(discount) : false;
+
+  // Returns the final (discounted if applicable) price as number
+  const getFinalPrice = (key: string): number => {
+    if (!pricing) return 0;
+    const original = (pricing as any)[key] as number || 0;
+    if (discountOn && discount) return calcDiscountedPrice(original, discount);
+    return original;
+  };
+
+  // Returns original price as number
+  const getOriginalPrice = (key: string): number => {
+    if (!pricing) return 0;
+    return (pricing as any)[key] as number || 0;
   };
 
   // ── Validation ────────────────────────────────────────────────────────────
@@ -128,8 +140,12 @@ const OrderSection = () => {
 
     try {
       // Store price value in the package field
-      const price = getPrice(form.package);
-      const packageLabel = price ? `${price} جنيه` : form.package;
+      const originalPrice = getOriginalPrice(form.package);
+      const finalPrice = getFinalPrice(form.package);
+      const hasDiscount = discountOn && finalPrice !== originalPrice;
+      const packageLabel = hasDiscount
+        ? `${defaultPackages.find(p => p.key === form.package)?.name} – ${finalPrice} جنيه (خصم ${discount?.percentage}% من ${originalPrice} جنيه)`
+        : `${defaultPackages.find(p => p.key === form.package)?.name} – ${finalPrice} جنيه`;
       const finalOccasion = form.occasion === "other" ? form.customOccasion || "أخرى" : form.occasion;
 
       const result = await addOrder({
@@ -412,7 +428,7 @@ const OrderSection = () => {
                 )}
               </AnimatePresence>
 
-              {/* Package — from DB */}
+              {/* Package — from DB with discount */}
               <FloatingField label="اختار الباقة *" error={errors.package}>
                 <select
                   value={form.package}
@@ -422,15 +438,37 @@ const OrderSection = () => {
                 >
                   <option value="" style={optionStyle}>اختار الباقة المناسبة ليك</option>
                   {defaultPackages.map(pkg => {
-                    const price = getPrice(pkg.key);
+                    const original = getOriginalPrice(pkg.key);
+                    const final = getFinalPrice(pkg.key);
+                    const hasDisc = discountOn && final !== original;
                     return (
                       <option key={pkg.key} value={pkg.key} style={optionStyle}>
-                        {pkg.emoji} {pkg.name} {price ? `– ${price} جنيه` : ""}
+                        {pkg.emoji} {pkg.name}
+                        {original > 0
+                          ? hasDisc
+                            ? ` – ${final} جنيه (كان ${original})`
+                            : ` – ${original} جنيه`
+                          : ""}
                       </option>
                     );
                   })}
                 </select>
               </FloatingField>
+
+              {/* Discount hint under select */}
+              {discountOn && discount && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center gap-1.5 px-3 py-2 bg-orange-500/10 border border-orange-500/20 rounded-xl"
+                >
+                  <Tag className="w-3.5 h-3.5 text-orange-400 shrink-0" />
+                  <p className="text-xs font-cairo text-orange-400">
+                    <span className="font-bold">خصم {discount.percentage}%</span>
+                    {discount.label ? ` — ${discount.label}` : ""} مطبق على جميع الباقات 🎉
+                  </p>
+                </motion.div>
+              )}
 
               {/* Package Info Note */}
               <div className="flex items-center gap-2">
@@ -449,28 +487,54 @@ const OrderSection = () => {
 
               {/* Selected Package Badge */}
               <AnimatePresence>
-                {form.package && (
-                  <motion.div
-                    key="pkg-badge"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="glass-card rounded-xl px-4 py-2.5 flex items-center gap-2"
-                    style={{
-                      border: "1px solid hsla(340,82%,62%,0.2)",
-                      background: "hsla(340,82%,62%,0.05)",
-                    }}
-                  >
-                    <span className="text-base">✅</span>
-                    <p className="text-xs font-cairo text-foreground/80">
-                      اخترت:{" "}
-                      <span className="font-bold text-foreground">
-                        {defaultPackages.find(p => p.key === form.package)?.name || form.package}
-                        {getPrice(form.package) ? ` – ${getPrice(form.package)} جنيه` : ""}
-                      </span>
-                    </p>
-                  </motion.div>
-                )}
+                {form.package && (() => {
+                  const selectedPkg = defaultPackages.find(p => p.key === form.package);
+                  const orig = getOriginalPrice(form.package);
+                  const final = getFinalPrice(form.package);
+                  const hasDisc = discountOn && final !== orig;
+                  return (
+                    <motion.div
+                      key="pkg-badge"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="glass-card rounded-xl px-4 py-3 space-y-1"
+                      style={{
+                        border: hasDisc ? "1px solid hsla(30,90%,55%,0.3)" : "1px solid hsla(340,82%,62%,0.2)",
+                        background: hasDisc ? "hsla(30,90%,55%,0.06)" : "hsla(340,82%,62%,0.05)",
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">✅</span>
+                        <p className="text-xs font-cairo text-foreground/80">
+                          اخترت:{" "}
+                          <span className="font-bold text-foreground">
+                            {selectedPkg?.emoji} {selectedPkg?.name || form.package}
+                          </span>
+                        </p>
+                        {hasDisc && discount && (
+                          <span className="mr-auto inline-flex items-center gap-1 bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                            <Tag className="w-2.5 h-2.5" />
+                            -{discount.percentage}%
+                          </span>
+                        )}
+                      </div>
+                      {orig > 0 && (
+                        <div className="flex items-baseline gap-2 pr-7">
+                          {hasDisc && (
+                            <span className="text-muted-foreground/50 text-xs line-through font-cairo">{orig} جنيه</span>
+                          )}
+                          <span className={`font-bold text-sm font-tajawal ${hasDisc ? "text-orange-400" : "text-foreground"}`}>
+                            {final} جنيه
+                          </span>
+                          {hasDisc && (
+                            <span className="text-green-400 text-[11px] font-cairo">وفرت {orig - final} جنيه 💰</span>
+                          )}
+                        </div>
+                      )}
+                    </motion.div>
+                  );
+                })()}
               </AnimatePresence>
 
               {/* Details */}

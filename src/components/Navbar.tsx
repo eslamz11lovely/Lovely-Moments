@@ -4,6 +4,7 @@ import { Home, Eye, Star, CreditCard, ShoppingCart, Moon, Sun } from "lucide-rea
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import { getSiteSettings } from "../services/settingsService";
+import AnnouncementBar from "./AnnouncementBar";
 
 // ─── Desktop Logo ─────────────────────────────────────
 const DesktopLogo = ({ onClick }: { onClick?: () => void }) => (
@@ -216,6 +217,13 @@ const Navbar = () => {
       </motion.header>
 
       {/* ══════════════════════════════════════════
+          ANNOUNCEMENT BAR — below mobile top bar
+         ══════════════════════════════════════════ */}
+      <div className="md:hidden fixed top-[57px] left-0 right-0 z-40">
+        <AnnouncementBar />
+      </div>
+
+      {/* ══════════════════════════════════════════
           DESKTOP TOP NAV
          ══════════════════════════════════════════ */}
       <motion.nav
@@ -308,55 +316,64 @@ const Navbar = () => {
       </motion.nav>
 
       {/* ══════════════════════════════════════════
+          ANNOUNCEMENT BAR — below desktop nav
+         ══════════════════════════════════════════ */}
+      <div className="hidden md:block fixed top-[61px] left-0 right-0 z-40">
+        <AnnouncementBar />
+      </div>
+
+      {/* ══════════════════════════════════════════
           MOBILE BOTTOM NAV
          ══════════════════════════════════════════ */}
-      <div
-        className="md:hidden fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl shadow-lg"
-        style={{
-          background: "var(--glass-bg)",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-          borderTop: "1px solid var(--glass-border)",
-          paddingBottom: "env(safe-area-inset-bottom, 0px)",
-        }}
-      >
-        <div className="flex items-center justify-around py-2 px-2">
-          {navItems.map((item) => {
-            const active = isActive(item.path);
-            return (
-              <button
-                key={item.path}
-                onClick={() => handleNavClick(item.path)}
-                className={`flex flex-col items-center gap-1 transition-all duration-200 py-1 px-2 rounded-xl relative ${active ? "text-primary" : "text-foreground/60 hover:text-primary"
-                  }`}
-              >
-                {/* Active pill background */}
-                {active && (
-                  <motion.span
-                    layoutId="nav-active-bg"
-                    className="absolute inset-0 rounded-xl"
-                    style={{ background: "hsla(340,82%,62%,0.12)" }}
-                  />
-                )}
-                <span className="relative">
-                  <item.icon size={20} />
+      {!location.pathname.startsWith("/admin") && (
+        <div
+          className="md:hidden fixed bottom-0 left-0 right-0 z-[40] rounded-t-2xl shadow-lg"
+          style={{
+            background: "var(--glass-bg)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            borderTop: "1px solid var(--glass-border)",
+            paddingBottom: "env(safe-area-inset-bottom, 0px)",
+          }}
+        >
+          <div className="flex items-center justify-around py-2 px-2">
+            {navItems.map((item) => {
+              const active = isActive(item.path);
+              return (
+                <button
+                  key={item.path}
+                  onClick={() => handleNavClick(item.path)}
+                  className={`flex flex-col items-center gap-1 transition-all duration-200 py-1 px-2 rounded-xl relative ${active ? "text-primary" : "text-foreground/60 hover:text-primary"
+                    }`}
+                >
+                  {/* Active pill background */}
                   {active && (
                     <motion.span
-                      layoutId="nav-active-dot"
-                      className="absolute -top-1 -right-1 w-2 h-2 rounded-full"
-                      style={{
-                        background: "hsl(340,82%,62%)",
-                        boxShadow: "0 0 6px hsl(340,82%,62%)",
-                      }}
+                      layoutId="nav-active-bg"
+                      className="absolute inset-0 rounded-xl"
+                      style={{ background: "hsla(340,82%,62%,0.12)" }}
                     />
                   )}
-                </span>
-                <span className="text-[10px] font-medium font-cairo">{item.label}</span>
-              </button>
-            );
-          })}
+                  <span className="relative">
+                    <item.icon size={20} />
+                    {active && (
+                      <motion.span
+                        layoutId="nav-active-dot"
+                        className="absolute -top-1 -right-1 w-2 h-2 rounded-full"
+                        style={{
+                          background: "hsl(340,82%,62%)",
+                          boxShadow: "0 0 6px hsl(340,82%,62%)",
+                        }}
+                      />
+                    )}
+                  </span>
+                  <span className="text-[10px] font-medium font-cairo">{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
     </>
   );
 };

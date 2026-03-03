@@ -58,6 +58,17 @@ service cloud.firestore {
       allow create: if true;
       allow delete: if request.auth != null;
     }
+
+    // Reviews - Anyone can read approved reviews and create new ones
+    match /reviews/{reviewId} {
+      // Public can read approved reviews
+      allow read: if resource.data.approved == true;
+      // Public can create (submit form) — always pending, never auto-approved
+      allow create: if request.resource.data.approved == false
+                    && request.resource.data.status == 'pending';
+      // Only authenticated admin can update or delete
+      allow update, delete: if request.auth != null;
+    }
   }
 }
 ```

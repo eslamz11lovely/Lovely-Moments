@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Save, Loader2, Phone, Mail, Lock, CheckCircle2, AlertCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Save, Loader2, Phone, Mail, Lock, CheckCircle2, AlertCircle, Megaphone, ToggleLeft, ToggleRight, Eye } from "lucide-react";
 import { getDatabase } from "../../services/firebase";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import HeartLoader from "../HeartLoader";
+import { type Announcement, DEFAULT_ANNOUNCEMENT } from "../../services/settingsService";
 
 interface SiteSettings {
     siteName: string;
@@ -13,6 +14,7 @@ interface SiteSettings {
     facebookLink: string;
     instagramLink: string;
     tiktokLink: string;
+    announcement?: Announcement;
 }
 
 export const SettingsSection = () => {
@@ -28,7 +30,9 @@ export const SettingsSection = () => {
 
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [isSavingAnn, setIsSavingAnn] = useState(false);
     const [message, setMessage] = useState<{ text: string, type: "success" | "error" } | null>(null);
+    const [ann, setAnn] = useState<Announcement>(DEFAULT_ANNOUNCEMENT);
 
     useEffect(() => {
         const fetchSettings = async () => {
@@ -38,7 +42,9 @@ export const SettingsSection = () => {
                 const docSnap = await getDoc(docRef);
 
                 if (docSnap.exists()) {
-                    setSettings({ ...settings, ...docSnap.data() });
+                    const data = docSnap.data();
+                    setSettings({ ...settings, ...data });
+                    if (data.announcement) setAnn(data.announcement);
                 }
             } catch (error) {
                 console.error("Error fetching settings:", error);
@@ -64,6 +70,7 @@ export const SettingsSection = () => {
             const db = getDatabase();
             await setDoc(doc(db, "settings", "general"), {
                 ...settings,
+                announcement: ann,
                 updatedAt: serverTimestamp()
             });
 
@@ -224,6 +231,163 @@ export const SettingsSection = () => {
                                 placeholder="https://tiktok.com/@..."
                             />
                         </div>
+                    </div>
+                </div>
+
+                {/* ══ Announcement Bar Card ════════════════ */}
+                <div className="bg-slate-800/40 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6 md:p-8">
+                    <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
+                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                            <span className="w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center">
+                                <Megaphone className="w-4 h-4 text-orange-400" />
+                            </span>
+                            شريط الإعلانات
+                            {ann.enabled && (
+                                <span className="text-[11px] font-cairo font-normal bg-orange-500/20 text-orange-400 border border-orange-500/30 px-2 py-0.5 rounded-full">
+                                    نشط الآن
+                                </span>
+                            )}
+                        </h3>
+
+                        {/* Enable / Disable Toggle */}
+                        <button
+                            type="button"
+                            onClick={() => setAnn(p => ({ ...p, enabled: !p.enabled }))}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-cairo font-medium transition-all ${ann.enabled
+                                    ? "bg-orange-500/15 border-orange-500/30 text-orange-400"
+                                    : "bg-slate-700/40 border-slate-600/40 text-slate-400 hover:text-slate-300"
+                                }`}
+                        >
+                            {ann.enabled
+                                ? <><ToggleRight className="w-4 h-4" /> الشريط مفعّل</>
+                                : <><ToggleLeft className="w-4 h-4" /> الشريط معطّل</>}
+                        </button>
+                    </div>
+
+                    <div className={`space-y-5 transition-opacity duration-300 ${ann.enabled ? "opacity-100" : "opacity-40 pointer-events-none"}`}>
+
+                        {/* Text */}
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-medium text-slate-300">نص الإعلان</label>
+                            <textarea
+                                rows={2}
+                                value={ann.text}
+                                onChange={e => setAnn(p => ({ ...p, text: e.target.value }))}
+                                placeholder="مثال: عيد الأم قرب — احجز هديتك الآن واستمتع بخصم خاص لمدة محدودة 🌸"
+                                className="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-3 text-white text-sm font-cairo resize-none focus:outline-none focus:ring-2 focus:ring-orange-500/40 transition-all"
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                            {/* Emoji */}
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-medium text-slate-300">إيموجي (emoji)</label>
+                                <input
+                                    type="text"
+                                    value={ann.emoji}
+                                    onChange={e => setAnn(p => ({ ...p, emoji: e.target.value }))}
+                                    placeholder="🎉"
+                                    maxLength={4}
+                                    className="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-3 text-white text-center text-xl focus:outline-none focus:ring-2 focus:ring-orange-500/40 transition-all"
+                                />
+                            </div>
+
+                            {/* Style */}
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-medium text-slate-300">لون الشريط</label>
+                                <div className="flex gap-2 flex-wrap">
+                                    {([
+                                        { key: "gradient", label: "بنفسجي", bg: "bg-gradient-to-r from-pink-700 to-purple-700" },
+                                        { key: "golden", label: "ذهبي", bg: "bg-gradient-to-r from-yellow-700 to-amber-600" },
+                                        { key: "pink", label: "وردي", bg: "bg-gradient-to-r from-pink-700 to-rose-600" },
+                                        { key: "blue", label: "أزرق", bg: "bg-gradient-to-r from-blue-700 to-sky-600" },
+                                        { key: "green", label: "أخضر", bg: "bg-gradient-to-r from-emerald-800 to-teal-700" },
+                                    ] as const).map(s => (
+                                        <button
+                                            key={s.key}
+                                            type="button"
+                                            onClick={() => setAnn(p => ({ ...p, style: s.key }))}
+                                            className={`${s.bg} text-white text-xs font-cairo px-3 py-1.5 rounded-lg transition-all ${ann.style === s.key ? "ring-2 ring-white/60 scale-105" : "opacity-60 hover:opacity-80"
+                                                }`}
+                                        >
+                                            {s.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Optional Link */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <label className="text-xs text-slate-500 font-cairo">رابط اختياري (CTA)</label>
+                                <input
+                                    type="url"
+                                    value={ann.link || ""}
+                                    onChange={e => setAnn(p => ({ ...p, link: e.target.value }))}
+                                    dir="ltr"
+                                    placeholder="https://..."
+                                    className="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/40 transition-all text-left"
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-xs text-slate-500 font-cairo">نص الزر (CTA label)</label>
+                                <input
+                                    type="text"
+                                    value={ann.linkLabel || ""}
+                                    onChange={e => setAnn(p => ({ ...p, linkLabel: e.target.value }))}
+                                    placeholder="احجز الآن ←"
+                                    className="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-2.5 text-white text-sm font-cairo focus:outline-none focus:ring-2 focus:ring-orange-500/40 transition-all"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Live Preview */}
+                        {ann.text && (
+                            <div className="space-y-1.5">
+                                <p className="text-xs text-slate-500 font-cairo flex items-center gap-1">
+                                    <Eye className="w-3 h-3" /> معاينة مباشرة:
+                                </p>
+                                <div
+                                    className="relative overflow-hidden rounded-xl py-2 px-10 text-white text-center text-xs font-cairo"
+                                    style={{
+                                        background: ann.style === "gradient" ? "linear-gradient(90deg,hsl(340,82%,40%),hsl(280,70%,35%),hsl(340,82%,40%))" :
+                                            ann.style === "golden" ? "linear-gradient(90deg,hsl(35,80%,35%),hsl(45,90%,40%),hsl(35,80%,35%))" :
+                                                ann.style === "pink" ? "linear-gradient(90deg,hsl(330,80%,38%),hsl(350,75%,45%),hsl(330,80%,38%))" :
+                                                    ann.style === "blue" ? "linear-gradient(90deg,hsl(220,80%,35%),hsl(200,85%,40%),hsl(220,80%,35%))" :
+                                                        "linear-gradient(90deg,hsl(150,60%,28%),hsl(160,65%,35%),hsl(150,60%,28%))"
+                                    }}
+                                >
+                                    {ann.emoji} {ann.text} {ann.linkLabel && <span className="underline ml-1">{ann.linkLabel}</span>}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Save Announcement */}
+                    <div className="flex justify-end mt-5">
+                        <button
+                            type="button"
+                            disabled={isSavingAnn}
+                            onClick={async () => {
+                                setIsSavingAnn(true);
+                                try {
+                                    const db = getDatabase();
+                                    await setDoc(doc(db, "settings", "general"), {
+                                        ...settings,
+                                        announcement: ann,
+                                        updatedAt: serverTimestamp()
+                                    }, { merge: true });
+                                    setMessage({ text: "✅ تم حفظ شريط الإعلان بنجاح!", type: "success" });
+                                    setTimeout(() => setMessage(null), 3000);
+                                } catch { setMessage({ text: "حدث خطأ!", type: "error" }); }
+                                finally { setIsSavingAnn(false); }
+                            }}
+                            className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-tajawal font-semibold rounded-xl transition-all disabled:opacity-50 text-sm"
+                        >
+                            {isSavingAnn ? <Loader2 className="w-4 h-4 animate-spin" /> : <Megaphone className="w-4 h-4" />}
+                            حفظ الإعلان
+                        </button>
                     </div>
                 </div>
 

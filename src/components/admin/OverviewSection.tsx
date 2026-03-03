@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Package, ShoppingCart, Clock, TrendingUp, DollarSign, Wallet } from "lucide-react";
+import { Package, ShoppingCart, Clock, TrendingUp, DollarSign, Wallet, Star } from "lucide-react";
 import { Order, getOrders } from "../../services/ordersService";
+import { getAllReviews } from "../../services/reviewsAdminService";
+import type { Review } from "../../services/reviewsService";
 import HeartLoader from "../HeartLoader";
 
 // Helper function to format date
@@ -51,24 +53,30 @@ const StatsCard = ({ title, value, icon: Icon, color, delay }: StatsCardProps) =
 
 export const OverviewSection = () => {
     const [orders, setOrders] = useState<Order[]>([]);
+    const [reviews, setReviews] = useState<Review[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const fetchOrders = async () => {
+        const fetchData = async () => {
             try {
-                const data = await getOrders();
-                setOrders(data);
+                const [ordersData, reviewsData] = await Promise.all([
+                    getOrders(),
+                    getAllReviews(),
+                ]);
+                setOrders(ordersData);
+                setReviews(reviewsData);
             } catch (error) {
-                console.error("Error fetching orders:", error);
+                console.error("Error fetching data:", error);
             } finally {
                 setIsLoading(false);
             }
         };
 
-        fetchOrders();
+        fetchData();
     }, []);
 
     const totalOrders = orders.length;
+    const totalReviews = reviews.length;
 
     // Calculate most selected package
     const packageCounts = orders.reduce((acc, order) => {
@@ -165,11 +173,18 @@ export const OverviewSection = () => {
                     delay={0.4}
                 />
                 <StatsCard
+                    title="عدد التقييمات"
+                    value={totalReviews}
+                    icon={Star}
+                    color="bg-amber-500"
+                    delay={0.5}
+                />
+                <StatsCard
                     title="نسبة الإنجاز"
                     value={`${totalOrders > 0 ? Math.round(((totalOrders - pendingOrders) / totalOrders) * 100) : 0}%`}
                     icon={TrendingUp}
                     color="bg-pink-500"
-                    delay={0.5}
+                    delay={0.6}
                 />
             </div>
 
