@@ -1,7 +1,6 @@
 // Firebase Service - Centralized Firebase initialization
 import { initializeApp, FirebaseApp } from "firebase/app";
 import { getFirestore, Firestore } from "firebase/firestore";
-import { getAuth, Auth } from "firebase/auth";
 
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDDMHSJFERAw0FbJibnPuJq7A7tDBtEgSQ",
@@ -15,15 +14,13 @@ const firebaseConfig = {
 // Initialize Firebase only once
 let app: FirebaseApp | null = null;
 let db: Firestore | null = null;
-let auth: Auth | null = null;
 
 const initializeFirebase = () => {
     if (!app) {
         app = initializeApp(firebaseConfig);
         db = getFirestore(app);
-        auth = getAuth(app);
     }
-    return { app, db: db!, auth: auth! };
+    return { app, db: db! };
 };
 
 // Get Firestore instance
@@ -34,16 +31,8 @@ export const getDatabase = (): Firestore => {
     return db!;
 };
 
-// Get Auth instance
-export const getAuthInstance = (): Auth => {
-    if (!auth) {
-        initializeFirebase();
-    }
-    return auth!;
-};
-
 // Export singleton instances
-export { app, db, auth };
+export { app, db };
 
 // Initialize on import
 initializeFirebase();

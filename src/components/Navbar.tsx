@@ -92,15 +92,15 @@ const Navbar = () => {
   }, []);
 
   const handleLogoClick = () => {
-    setLogoClicks(prev => {
-      const newClicks = prev + 1;
-      if (newClicks >= 5) {
-        navigate("/admin/login");
-        return 0; // reset
-      }
-      return newClicks;
-    });
+    setLogoClicks((prev) => prev + 1);
   };
+
+  useEffect(() => {
+    if (logoClicks >= 5) {
+      navigate("/admin/login");
+      setLogoClicks(0);
+    }
+  }, [logoClicks, navigate]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);

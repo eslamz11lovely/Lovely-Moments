@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { useTheme } from "@/hooks/useTheme";
 
 const WhatIsLovelySection = () => {
@@ -6,7 +5,7 @@ const WhatIsLovelySection = () => {
 
   return (
     <section className="py-20 px-4 relative overflow-hidden">
-      {/* Static radial glow — no animation, pure CSS */}
+      {/* Static radial glow — pure CSS */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -17,28 +16,14 @@ const WhatIsLovelySection = () => {
       />
 
       <div className="max-w-5xl mx-auto relative z-10">
-        {/* Title — single fade-in, once */}
-        <motion.h2
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.55 }}
-          className="text-3xl md:text-4xl font-bold text-center mb-12 font-tajawal"
-        >
-          يعني إيه{" "}
-          <span className="gradient-text">Lovely Moments</span>؟ 💙
-        </motion.h2>
+        <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 font-tajawal">
+          يعني إيه <span className="gradient-text">Lovely Moments</span>؟ 💙
+        </h2>
 
-        {/* 2-column */}
         <div className="grid md:grid-cols-2 gap-8 items-center">
-
           {/* Text card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-60px" }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="glass-card rounded-2xl p-7 space-y-4"
+          <div
+            className="glass-card rounded-2xl p-7 space-y-4 hover:shadow-lg transition-shadow duration-300"
             style={{ border: "1px solid var(--glass-border)" }}
           >
             <p className="text-lg leading-loose text-foreground/90 font-cairo">
@@ -47,9 +32,7 @@ const WhatIsLovelySection = () => {
             <p className="text-base leading-loose text-muted-foreground font-cairo">
               الهدايا مش مجرد حاجة مادية…
               <br />
-              إحنا بنصمم لك{" "}
-              <span className="gradient-text font-bold">إحساس، لحظة، ومشاعر</span>{" "}
-              تفضل محفورة في القلب.
+              إحنا بنصمم لك <span className="gradient-text font-bold">إحساس، لحظة، ومشاعر</span> تفضل محفورة في القلب.
             </p>
             <div className="flex gap-2 flex-wrap pt-1">
               {["💙 مميز", "✨ شخصي", "🎁 لا يُنسى"].map((tag) => (
@@ -65,18 +48,12 @@ const WhatIsLovelySection = () => {
                 </span>
               ))}
             </div>
-          </motion.div>
+          </div>
 
-          {/* Visual card — static float via CSS, NO JS Infinity loops */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-60px" }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="flex items-center justify-center py-8"
-          >
+          {/* Visual card */}
+          <div className="flex items-center justify-center py-8">
             <div
-              className="glass-card rounded-2xl p-8 flex flex-col items-center gap-3 w-52"
+              className="glass-card rounded-2xl p-8 flex flex-col items-center gap-3 w-52 hover:-translate-y-2 transition-transform duration-300"
               style={{
                 border: theme === "light"
                   ? "1px solid hsla(340, 82%, 55%, 0.2)"
@@ -86,7 +63,7 @@ const WhatIsLovelySection = () => {
                   : "0 4px 30px hsla(340,82%,62%,0.15)",
               }}
             >
-              <span className="text-5xl">💙</span>
+              <span className="text-5xl drop-shadow-md">💙</span>
               <p className="gradient-text font-bold text-base font-tajawal text-center">
                 Lovely Moments
               </p>
@@ -94,7 +71,7 @@ const WhatIsLovelySection = () => {
                 ذكرى تعيش سنين
               </p>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>

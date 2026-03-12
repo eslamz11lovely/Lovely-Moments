@@ -1,18 +1,12 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { getHomepageReviews, type Review } from "@/services/reviewsService";
 import { Star, Sparkles, ArrowLeft } from "lucide-react";
 
-// ── Static fallback reviews ───────────────────────────
-// Shown while Firestore loads or if no approved reviews exist
 const FALLBACK_TESTIMONIALS: Omit<Review, "id" | "createdAt" | "approved" | "showOnHome" | "displayOrder" | "status">[] = [
     { customerName: "سارة أحمد", reviewText: "هدية مختلفة ومميزة جداً! فرحت صاحبتي بيها أوي 💕", rating: 5, imageUrl: null, featured: false },
     { customerName: "محمد علي", reviewText: "خدمة ممتازة وتصميم راقي، الكل اتبسط من الهدية 🎁", rating: 5, imageUrl: null, featured: false },
     { customerName: "نورهان خالد", reviewText: "أحلى حاجة عملتها لخطيبي في عيد ميلاده، شكراً Lovely Moments ❤️", rating: 5, imageUrl: null, featured: false },
-    { customerName: "أحمد حسن", reviewText: "فكرة إبداعية وتنفيذ احترافي، هكرر التجربة أكيد ✨", rating: 5, imageUrl: null, featured: false },
-    { customerName: "ياسمين وليد", reviewText: "من أجمل الهدايا اللي قدمتها في حياتي، الكل سألني عليها 🌹", rating: 5, imageUrl: null, featured: false },
-    { customerName: "كريم محمود", reviewText: "سهولة في الطلب وسرعة في التنفيذ، تجربة رائعة 👏", rating: 5, imageUrl: null, featured: false },
 ];
 
 const StarIcon = ({ filled }: { filled: boolean }) => (
@@ -37,7 +31,7 @@ const TestimonialsSection = () => {
         getHomepageReviews()
             .then((reviews) => {
                 if (reviews.length > 0) {
-                    setItems(reviews);
+                    setItems(reviews.slice(0, 3)); // Only take top 3 for lightweight homepage
                 }
             })
             .catch(() => {
@@ -45,117 +39,83 @@ const TestimonialsSection = () => {
             });
     }, []);
 
-    // Duplicate for seamless marquee loop
-    const doubled = [...items, ...items];
-
     return (
-        <section className="py-20 px-4 overflow-hidden">
+        <section className="py-20 px-4">
             <div className="max-w-5xl mx-auto">
-                {/* ── Title ── */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: "-60px" }}
-                    transition={{ duration: 0.5 }}
-                    className="text-center mb-12"
-                >
+                <div className="text-center mb-12">
                     <h2 className="text-3xl md:text-4xl font-bold font-tajawal mb-3">
-                        آراء{" "}
-                        <span className="gradient-text">عملائنا</span>
+                        آراء <span className="gradient-text">عملائنا</span>
                     </h2>
                     <p className="text-muted-foreground font-cairo text-sm md:text-base">
                         اللي جربوا Lovely Moments بيقولوا إيه 💬
                     </p>
-                </motion.div>
-
-                {/* ── Marquee ── */}
-                <div className="relative">
-                    {/* Fade edges */}
-                    <div
-                        className="pointer-events-none absolute inset-y-0 left-0 w-16 md:w-24 z-10"
-                        style={{ background: "linear-gradient(to right, hsl(var(--background)), transparent)" }}
-                    />
-                    <div
-                        className="pointer-events-none absolute inset-y-0 right-0 w-16 md:w-24 z-10"
-                        style={{ background: "linear-gradient(to left, hsl(var(--background)), transparent)" }}
-                    />
-
-                    <div className="testimonial-marquee-wrapper">
-                        <div className="testimonial-marquee-track">
-                            {doubled.map((t, i) => (
-                                <div
-                                    key={i}
-                                    className={`testimonial-card glass-card rounded-2xl p-5 flex-shrink-0 w-72 md:w-80 select-none ${t.featured ? "border border-amber-500/30" : ""
-                                        }`}
-                                    style={{ border: t.featured ? undefined : "1px solid var(--glass-border)" }}
-                                >
-                                    {/* Featured badge */}
-                                    {t.featured && (
-                                        <div className="flex items-center gap-1 text-amber-400 text-[10px] font-bold mb-2">
-                                            <Sparkles className="w-3 h-3" />
-                                            مميز
-                                        </div>
-                                    )}
-
-                                    {/* Stars */}
-                                    <div className="flex gap-0.5 mb-3" dir="ltr">
-                                        {Array.from({ length: 5 }).map((_, s) => (
-                                            <StarIcon key={s} filled={s < t.rating} />
-                                        ))}
-                                    </div>
-
-                                    {/* Quote */}
-                                    <p className="font-cairo text-sm leading-relaxed text-foreground/85 mb-4">
-                                        &ldquo;{t.reviewText}&rdquo;
-                                    </p>
-
-                                    {/* Author */}
-                                    <div className="flex items-center gap-3">
-                                        {t.imageUrl ? (
-                                            <img
-                                                src={t.imageUrl}
-                                                alt={t.customerName}
-                                                loading="lazy"
-                                                className="w-9 h-9 rounded-full object-cover flex-shrink-0"
-                                            />
-                                        ) : (
-                                            <div
-                                                className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
-                                                style={{ background: "var(--gradient-primary)" }}
-                                            >
-                                                {t.customerName.charAt(0)}
-                                            </div>
-                                        )}
-                                        <span className="font-tajawal text-sm font-semibold">
-                                            {t.customerName}
-                                        </span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
                 </div>
 
-                {/* ── CTA to /reviews ── */}
-                <motion.div
-                    initial={{ opacity: 0, y: 16 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: "-40px" }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
-                    className="text-center mt-12 space-y-3"
-                >
+                <div className="grid md:grid-cols-3 gap-6">
+                    {items.slice(0, 3).map((t, i) => (
+                        <div
+                            key={i}
+                            className={`glass-card rounded-2xl p-6 flex flex-col hover:-translate-y-2 transition-transform duration-300 ${t.featured ? "border border-amber-500/30" : ""}`}
+                            style={{ border: t.featured ? undefined : "1px solid var(--glass-border)" }}
+                        >
+                            {/* Featured badge */}
+                            {t.featured && (
+                                <div className="flex items-center gap-1 text-amber-400 text-[10px] font-bold mb-2">
+                                    <Sparkles className="w-3 h-3" />
+                                    مميز
+                                </div>
+                            )}
+
+                            {/* Stars */}
+                            <div className="flex gap-0.5 mb-4" dir="ltr">
+                                {Array.from({ length: 5 }).map((_, s) => (
+                                    <StarIcon key={s} filled={s < t.rating} />
+                                ))}
+                            </div>
+
+                            {/* Quote */}
+                            <p className="font-cairo text-sm leading-relaxed text-foreground/85 mb-6 flex-grow">
+                                &ldquo;{t.reviewText}&rdquo;
+                            </p>
+
+                            {/* Author */}
+                            <div className="flex items-center gap-3 mt-auto">
+                                {t.imageUrl ? (
+                                    <img
+                                        src={t.imageUrl}
+                                        alt={t.customerName}
+                                        loading="lazy"
+                                        className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                                    />
+                                ) : (
+                                    <div
+                                        className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
+                                        style={{ background: "var(--gradient-primary)" }}
+                                    >
+                                        {t.customerName.charAt(0)}
+                                    </div>
+                                )}
+                                <span className="font-tajawal text-sm font-semibold">
+                                    {t.customerName}
+                                </span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="text-center mt-12 space-y-3">
                     <p className="font-cairo text-sm text-muted-foreground">
                         تحب تشاركنا رأيك؟
                     </p>
                     <Link
                         to="/reviews"
-                        className="inline-flex items-center gap-2 glow-button text-white font-tajawal font-bold px-6 py-3 rounded-xl text-sm"
+                        className="inline-flex items-center gap-2 glow-button text-white font-tajawal font-bold px-6 py-3 rounded-xl text-sm transition-transform duration-300 hover:scale-105"
                     >
                         <Star className="w-4 h-4 fill-white" />
                         اكتب تقييمك الآن
                         <ArrowLeft className="w-4 h-4" />
                     </Link>
-                </motion.div>
+                </div>
             </div>
         </section>
     );
